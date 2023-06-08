@@ -27,7 +27,7 @@ const int shapeCount = 4;
 class Jazzicon {
   ///Will return GREY only if the address is not valid.
   static JazziconData getJazziconData(double diameter,
-      {int? seed, String? address}) {
+      {int? seed, String? address, List<Color>? colorList}) {
     if (address != null && address.trim().isNotEmpty) {
       address = address.toLowerCase();
 
@@ -57,7 +57,7 @@ class Jazzicon {
     MersenneTwister19937 generator = MersenneTwister19937();
     generator.init_genrand(seed);
 
-    List<Color> remainingColors = _hueShift(colors, generator);
+    List<Color> remainingColors = _hueShift(colorList ?? colors, generator);
 
     Color background = _genColor(remainingColors, generator);
 
