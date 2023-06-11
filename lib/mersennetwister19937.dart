@@ -7,14 +7,15 @@ class MersenneTwister19937 {
   //c//#define LOWER_MASK 0x7fffffffUL /* least significant r bits */
   static const int N = 624;
   static const int M = 397;
-  static const int MATRIX_A = 0x9908b0df; /* constant vector a */
-  static const int UPPER_MASK = 0x80000000; /* most significant w-r bits */
-  static const int LOWER_MASK = 0x7fffffff; /* least significant r bits */
+  static const int matrixA = 0x9908b0df; /* constant vector a */
+  static const int upperMask = 0x80000000; /* most significant w-r bits */
+  static const int lowerMask = 0x7fffffff; /* least significant r bits */
   //c//static unsigned long mt[N]; /* the array for the state vector  */
   //c//static int mti=N+1; /* mti==N+1 means mt[N] is not initialized */
   late List<int>
       mt; // = new List<num>(N);   /* the array for the state vector  */
-  var mti; // = N+1;           /* mti==N+1 means mt[N] is not initialized */
+  late int
+      mti; // = N+1;           /* mti==N+1 means mt[N] is not initialized */
 
   MersenneTwister19937() {
     mt = List.filled(N, 0);
@@ -24,7 +25,7 @@ class MersenneTwister19937 {
   static unsigned32(
       int n1) // returns a 32-bits unsiged integer from an operand to which applied a bit operator.
   {
-    return n1 < 0 ? (n1 ^ UPPER_MASK) + UPPER_MASK : n1;
+    return n1 < 0 ? (n1 ^ upperMask) + upperMask : n1;
   }
 
   subtraction32(int n1,
@@ -55,7 +56,7 @@ class MersenneTwister19937 {
 
   /* initializes mt[N] with a seed */
   //c//void init_genrand(unsigned long s)
-  init_genrand(int? s) {
+  void initGenrand(int? s) {
     s = s ?? DateTime.now().millisecond;
 
     //c//mt[0]= s & 0xffffffff;
@@ -83,14 +84,16 @@ class MersenneTwister19937 {
   /* key_length is its length */
   /* slight change for C++, 2004/2/26 */
   //c//void init_by_array(unsigned long init_key[], int key_length)
-  init_by_array(var init_key, var key_length) {
+  void initByArray(var initKey, var keyLength) {
     //c//int i, j, k;
-    var i, j, k;
+    late int i;
+    late int j;
+    late dynamic k;
     //c//init_genrand(19650218);
-    this.init_genrand(19650218);
+    initGenrand(19650218);
     i = 1;
     j = 0;
-    k = (N > key_length ? N : key_length);
+    k = (N > keyLength ? N : keyLength);
     for (; k; k--) {
       //c//mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1664525))
       //c// + init_key[j] + j; /* non linear */
@@ -99,7 +102,7 @@ class MersenneTwister19937 {
               unsigned32(mt[i] ^
                   multiplication32(
                       unsigned32(mt[i - 1] ^ (mt[i - 1] >> 30)), 1664525)),
-              init_key[j]),
+              initKey[j]),
           j);
       mt[i] =
           //c//mt[i] &= 0xffffffff; /* for WORDSIZE > 32 machines */
@@ -110,12 +113,11 @@ class MersenneTwister19937 {
         mt[0] = mt[N - 1];
         i = 1;
       }
-      if (j >= key_length) j = 0;
+      if (j >= keyLength) j = 0;
     }
     for (k = N - 1; k; k--) {
       //c//mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1566083941))
       //c//- i; /* non linear */
-      var dbg = mt[i];
       mt[i] = subtraction32(
           unsigned32(mt[i] ^
               multiplication32(
@@ -134,13 +136,13 @@ class MersenneTwister19937 {
 
   /* generates a random number on [0,0xffffffff]-interval */
   //c//unsigned long genrand_int32(void)
-  genrand_int32() {
+  int genrandInt32() {
     //c//unsigned long y;
     //c//static unsigned long mag01[2]={0x0UL, MATRIX_A};
-    var y;
+    int y = 0;
     List<int> mag01 = []; //= new Array(0x0, MATRIX_A);
     mag01.add(0x0);
-    mag01.add(MATRIX_A);
+    mag01.add(matrixA);
     /* mag01[x] = x * MATRIX_A  for x=0,1 */
 
     if (mti >= N) {
@@ -148,25 +150,25 @@ class MersenneTwister19937 {
       //c//int kk;
       int kk;
 
-      if (mti == N + 1) /* if init_genrand() has not been called, */
-        //c//init_genrand(5489); /* a default initial seed is used */
-        this.init_genrand(5489); /* a default initial seed is used */
+      if (mti == N + 1) {
+        initGenrand(5489); /* a default initial seed is used */
+      }
 
       for (kk = 0; kk < N - M; kk++) {
         //c//y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
         //c//mt[kk] = mt[kk+M] ^ (y >> 1) ^ mag01[y & 0x1];
-        y = unsigned32((mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK));
+        y = unsigned32((mt[kk] & upperMask) | (mt[kk + 1] & lowerMask));
         mt[kk] = unsigned32(mt[kk + M] ^ (y >> 1) ^ mag01[y & 0x1]);
       }
       for (; kk < N - 1; kk++) {
         //c//y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
         //c//mt[kk] = mt[kk+(M-N)] ^ (y >> 1) ^ mag01[y & 0x1];
-        y = unsigned32((mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK));
+        y = unsigned32((mt[kk] & upperMask) | (mt[kk + 1] & lowerMask));
         mt[kk] = unsigned32(mt[kk + (M - N)] ^ (y >> 1) ^ mag01[y & 0x1]);
       }
       //c//y = (mt[N-1]&UPPER_MASK)|(mt[0]&LOWER_MASK);
       //c//mt[N-1] = mt[M-1] ^ (y >> 1) ^ mag01[y & 0x1];
-      y = unsigned32((mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK));
+      y = unsigned32((mt[N - 1] & upperMask) | (mt[0] & lowerMask));
       mt[N - 1] = unsigned32(mt[M - 1] ^ (y >> 1) ^ mag01[y & 0x1]);
       mti = 0;
     }
@@ -188,46 +190,46 @@ class MersenneTwister19937 {
 
   /* generates a random number on [0,0x7fffffff]-interval */
   //c//long genrand_int31(void)
-  genrand_int31() {
+  int genrandInt31() {
     //c//return (genrand_int32()>>1);
-    return (this.genrand_int32() >> 1);
+    return (genrandInt32() >> 1);
   }
 
   /* generates a random number on [0,1]-real-interval */
   //c//double genrand_real1(void)
-  genrand_real1() {
+  double genrandReal1() {
     //c//return genrand_int32()*(1.0/4294967295.0);
-    return this.genrand_int32() * (1.0 / 4294967295.0);
+    return genrandInt32() * (1.0 / 4294967295.0);
     /* divided by 2^32-1 */
   }
 
   /* generates a random number on [0,1)-real-interval */
   //c//double genrand_real2(void)
-  genrand_real2() {
+  double genrandReal2() {
     //c//return genrand_int32()*(1.0/4294967296.0);
-    return this.genrand_int32() * (1.0 / 4294967296.0);
+    return genrandInt32() * (1.0 / 4294967296.0);
     /* divided by 2^32 */
   }
 
   /* generates a random number on (0,1)-real-interval */
   //c//double genrand_real3(void)
-  genrand_real3() {
+  double genrandReal3() {
     //c//return ((genrand_int32()) + 0.5)*(1.0/4294967296.0);
-    return ((this.genrand_int32()) + 0.5) * (1.0 / 4294967296.0);
+    return ((genrandInt32()) + 0.5) * (1.0 / 4294967296.0);
     /* divided by 2^32 */
   }
 
   /* generates a random number on [0,1) with 53-bit resolution*/
   //c//double genrand_res53(void)
-  genrand_res53() {
+  double genrandRes53() {
     //c//unsigned long a=genrand_int32()>>5, b=genrand_int32()>>6;
-    var a = this.genrand_int32() >> 5, b = this.genrand_int32() >> 6;
+    var a = genrandInt32() >> 5, b = genrandInt32() >> 6;
     return (a * 67108864.0 + b) * (1.0 / 9007199254740992.0);
   }
 /* These real versions are due to Isaku Wada, 2002/01/09 added */
 
   double random() {
-    return this.genrand_int32() * (1.0 / 4294967296.0);
+    return genrandInt32() * (1.0 / 4294967296.0);
     /* divided by 2^32 */
   }
 }

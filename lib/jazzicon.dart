@@ -55,7 +55,7 @@ class Jazzicon {
       }
     }
     MersenneTwister19937 generator = MersenneTwister19937();
-    generator.init_genrand(seed);
+    generator.initGenrand(seed);
 
     List<Color> remainingColors = _hueShift(colorList ?? colors, generator);
 
