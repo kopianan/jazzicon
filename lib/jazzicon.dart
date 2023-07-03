@@ -84,8 +84,9 @@ class Jazzicon {
   }
 
   static Color _genColor(List<Color> colors, MersenneTwister19937 generator) {
-    double r1 = generator.random();
-    int idx = (colors.length * r1).floor();
+    generator.random();
+
+    int idx = (colors.length * generator.random()).floor();
     Color color = colors[idx];
     colors.removeAt(idx);
     return color;
